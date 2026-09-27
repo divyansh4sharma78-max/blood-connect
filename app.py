@@ -1,9 +1,11 @@
+import os
 from flask import Flask, render_template, request, jsonify
 import urllib.request
 import json
 
 app = Flask(__name__)
 
+# Mock data for blood banks and donors (fallback / initial state)
 blood_banks = [
     {"id": 1, "name": "Red Cross Blood Bank", "city": "Bhopal", "address": "Near TT Nagar Stadium, Bhopal", "lat": 23.2353, "lng": 77.4019, "phone": "+91 755-2551234", "stock": {"A+": 14, "A-": 3, "B+": 22, "B-": 4, "AB+": 8, "AB-": 2, "O+": 30, "O-": 5}},
     {"id": 2, "name": "Hamidia Hospital Blood Center", "city": "Bhopal", "address": "Sultania Rd, Bhopal", "lat": 23.2531, "lng": 77.3976, "phone": "+91 755-2740123", "stock": {"A+": 8, "A-": 1, "B+": 12, "B-": 2, "AB+": 5, "AB-": 1, "O+": 19, "O-": 3}},
@@ -22,10 +24,10 @@ def index():
 
 @app.route('/api/gemini-consult', methods=['POST'])
 def gemini_consult():
-    data = request.get_json()
+    data = request.get_json() or {}
     user_prompt = data.get('prompt', '')
     
-    api_key = "" # Automatically provided at runtime
+    api_key = os.environ.get("GEMINI_API_KEY", "")
     api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key={api_key}"
     
     payload = {
@@ -48,10 +50,6 @@ def gemini_consult():
             return jsonify({"result": text_out})
     except Exception as e:
         return jsonify({"result": f"Error communicating with Gemini model: {str(e)}"})
-
-if __name__ == '__main__':
-    app.run(debug=True)
-    import os
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
